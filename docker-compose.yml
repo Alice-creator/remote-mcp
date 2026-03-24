@@ -1,0 +1,10 @@
+services:
+  mcp-server:
+    build: .
+    ports:
+      - "${MCP_PORT}:${MCP_PORT}"
+    env_file:
+      - .env
+    volumes:
+      - ./workspace:/workspace
+    restart: unless-stopped
