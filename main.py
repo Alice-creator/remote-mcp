@@ -7,12 +7,20 @@ from pathlib import Path
 import psutil
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 load_dotenv()
 
 PORT = int(os.getenv("MCP_PORT"))
+CLAUDE_WORKING_DIR = os.getenv("CLAUDE_WORKING_DIR", "C:/Project")
+WSL_HOME = os.getenv("WSL_HOME", "/home/user")
 
-mcp = FastMCP("remote-pc-control", port=PORT)
+mcp = FastMCP(
+    "remote-pc-control",
+    port=PORT,
+    streamable_http_path="/",
+    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+)
 
 
 @mcp.tool()
@@ -92,5 +100,43 @@ async def get_system_info() -> str:
         return f"Error: {e}"
 
 
+# Track whether a Claude Code session has been started
+_claude_session_started = False
+
+
+@mcp.tool()
+async def claude_code(prompt: str, working_directory: str = None) -> str:
+    """Send a message to Claude Code running on this PC.
+    working_directory defaults to CLAUDE_WORKING_DIR from .env.
+    For WSL paths, use the format: \\\\wsl$\\Ubuntu\\home\\username\\project
+    The first call starts a new session, subsequent calls continue the same conversation."""
+    global _claude_session_started
+    cwd = working_directory or CLAUDE_WORKING_DIR
+    try:
+        cmd = ["claude", "-p", prompt]
+        if _claude_session_started:
+            cmd.append("--continue")
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300,
+            cwd=cwd,
+        )
+        _claude_session_started = True
+        output = ""
+        if result.stdout:
+            output += result.stdout
+        if result.stderr:
+            output += f"\n[stderr]\n{result.stderr}"
+        if result.returncode != 0:
+            output += f"\n[exit code: {result.returncode}]"
+        return output.strip() or "(no output)"
+    except subprocess.TimeoutExpired:
+        return "Claude Code timed out after 5 minutes"
+    except Exception as e:
+        return f"Error: {e}"
+
+
 if __name__ == "__main__":
-    mcp.run(transport="sse")
+    mcp.run(transport="streamable-http", mount_path="/")
