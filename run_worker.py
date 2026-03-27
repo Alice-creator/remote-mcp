@@ -1,4 +1,3 @@
-"""Backwards-compatible entry point. Runs the worker by default."""
 from worker.server import run
 
 if __name__ == "__main__":
