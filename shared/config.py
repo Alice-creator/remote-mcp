@@ -4,9 +4,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Server
-MCP_PORT = int(os.getenv("MCP_PORT", "1000"))
-CLAUDE_WORKING_DIR = os.getenv("CLAUDE_WORKING_DIR", "C:/Project")
+# Worker
+MCP_PORT = int(os.getenv("MCP_PORT", "8001"))
+CLAUDE_WORKING_DIR = os.getenv("CLAUDE_WORKING_DIR", "~/")
+
+# Gateway
+GATEWAY_PORT = int(os.getenv("GATEWAY_PORT", "8000"))
 
 # AI Factory
 FACTORY_SECRET = os.getenv("FACTORY_SECRET", "")

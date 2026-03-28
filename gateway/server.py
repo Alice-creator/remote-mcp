@@ -8,12 +8,12 @@ from starlette.routing import Route
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
-from shared.config import MCP_PORT, FACTORY_SECRET
+from shared.config import GATEWAY_PORT, FACTORY_SECRET
 from gateway import registry, tools
 
 mcp = FastMCP(
     "ai-factory-gateway",
-    port=MCP_PORT,
+    port=GATEWAY_PORT,
     streamable_http_path="/",
     transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=True),
 )
@@ -38,8 +38,8 @@ async def _register_endpoint(request: Request):
 
 
 def run():
-    print(f"[gateway] Starting on port {MCP_PORT}")
-    print(f"[gateway] Workers should POST heartbeats to http://<gateway>:{MCP_PORT}/api/register")
+    print(f"[gateway] Starting on port {GATEWAY_PORT}")
+    print(f"[gateway] Workers should POST heartbeats to http://<gateway>:{GATEWAY_PORT}/api/register")
 
     mcp_app = mcp.streamable_http_app()
 
@@ -50,4 +50,4 @@ def run():
     )
     app.mount("/", mcp_app)
 
-    uvicorn.run(app, host="0.0.0.0", port=MCP_PORT)
+    uvicorn.run(app, host="0.0.0.0", port=GATEWAY_PORT)
