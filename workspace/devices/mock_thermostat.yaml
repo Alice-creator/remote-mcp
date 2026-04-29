@@ -1,0 +1,4 @@
+name: mock_thermostat
+description: Mock thermostat (current temp, target, mode)
+base_url: http://localhost:9002
+spec_url: http://localhost:9002/openapi.json

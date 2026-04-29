@@ -4,21 +4,21 @@ services:
     command: python run_gateway.py
     ports:
       - "${GATEWAY_PORT:-8000}:${GATEWAY_PORT:-8000}"
-    env_file:
-      - .env
+    env_file: [.env]
     volumes:
       - ./workspace:/app/workspace
     restart: unless-stopped
 
-  worker:
+  mock-lights:
     build: .
-    command: python run_worker.py
+    command: uvicorn mocks.lights:app --host 0.0.0.0 --port 9001
     ports:
-      - "${MCP_PORT:-8001}:${MCP_PORT:-8001}"
-    env_file:
-      - .env
-    volumes:
-      - ./workspace:/app/workspace
+      - "9001:9001"
     restart: unless-stopped
-    depends_on:
-      - gateway
+
+  mock-thermostat:
+    build: .
+    command: uvicorn mocks.thermostat:app --host 0.0.0.0 --port 9002
+    ports:
+      - "9002:9002"
+    restart: unless-stopped

@@ -5,8 +5,8 @@ import uuid
 
 import httpx
 
-from shared.config import GATEWAY_URL, FACTORY_SECRET, WORKER_NAME, MCP_PORT
-from worker import capabilities
+from legacy.shared.config import GATEWAY_URL, FACTORY_SECRET, WORKER_NAME, MCP_PORT
+from legacy.worker import capabilities
 
 _worker_id = str(uuid.uuid4())
 _stop_event = threading.Event()

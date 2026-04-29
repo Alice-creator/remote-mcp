@@ -1,0 +1,4 @@
+name: mock_lights
+description: Mock smart lights service (3 rooms)
+base_url: http://localhost:9001
+spec_url: http://localhost:9001/openapi.json

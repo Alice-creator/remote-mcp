@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plexus</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>Plexus</h1>
+    <nav>
+      <button data-tab="devices" class="active">Devices</button>
+      <button data-tab="tools">Tools</button>
+      <button data-tab="chat">Chat</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="devices" class="tab active">
+      <div class="row">
+        <h2>Devices</h2>
+        <button id="reload-btn">Reload all</button>
+      </div>
+      <div id="device-list"></div>
+
+      <details class="add-form">
+        <summary>+ Add device</summary>
+        <form id="add-device-form">
+          <label>Name <small>(snake_case, unique)</small>
+            <input name="name" required pattern="[a-z][a-z0-9_]*" placeholder="mock_lights">
+          </label>
+          <label>Description
+            <input name="description" placeholder="Living-room smart bulbs">
+          </label>
+          <label>Base URL
+            <input name="base_url" type="url" required placeholder="http://localhost:9001">
+          </label>
+          <label>OpenAPI Spec URL
+            <input name="spec_url" type="url" placeholder="http://localhost:9001/openapi.json">
+          </label>
+          <label>OR Local Spec Path
+            <input name="spec_path" placeholder="/path/to/spec.yaml">
+          </label>
+          <button type="submit">Add</button>
+        </form>
+      </details>
+    </section>
+
+    <section id="tools" class="tab">
+      <div class="row">
+        <h2>Tools <span id="tool-count" class="muted"></span></h2>
+        <button id="refresh-tools">Refresh</button>
+      </div>
+      <div id="tool-list"></div>
+    </section>
+
+    <section id="chat" class="tab">
+      <h2>Chat</h2>
+      <details class="chat-config">
+        <summary>LLM settings</summary>
+        <div class="grid">
+          <label>Base URL
+            <input id="cfg-base-url" placeholder="https://ollama.com/v1">
+          </label>
+          <label>Model
+            <input id="cfg-model" placeholder="gpt-oss:20b">
+          </label>
+          <label>API Key
+            <input id="cfg-api-key" type="password" placeholder="(or set LLM_API_KEY in env)">
+          </label>
+          <label>System prompt
+            <textarea id="cfg-system" rows="3" placeholder="(default smart-home assistant)"></textarea>
+          </label>
+        </div>
+        <button id="cfg-clear">Clear chat</button>
+      </details>
+      <div id="messages"></div>
+      <form id="chat-form">
+        <input id="user-input" placeholder="Turn on the living-room light" autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

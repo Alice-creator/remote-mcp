@@ -1,0 +1,246 @@
+* { box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  margin: 0;
+  background: #0d1117;
+  color: #c9d1d9;
+  font-size: 14px;
+}
+
+header {
+  padding: 1rem 2rem 0;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+}
+header h1 { margin: 0 0 0.5rem; font-size: 1.25rem; font-weight: 600; }
+
+nav {
+  display: flex;
+  gap: 0.25rem;
+}
+nav button {
+  background: none;
+  border: 1px solid transparent;
+  color: #8b949e;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  border-radius: 4px 4px 0 0;
+  margin-bottom: -1px;
+}
+nav button:hover { color: #c9d1d9; }
+nav button.active {
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+  border-bottom-color: #0d1117;
+  background: #0d1117;
+}
+
+main {
+  padding: 1.5rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.tab { display: none; }
+.tab.active { display: block; }
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.muted { color: #8b949e; font-weight: normal; font-size: 0.85em; }
+
+h2 { margin: 0; font-size: 1.1rem; }
+
+.device, .tool {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+}
+.device h3, .tool h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.device-meta, .tool-meta {
+  font-size: 0.8rem;
+  color: #8b949e;
+  margin-bottom: 0.25rem;
+}
+code, pre, textarea, input[type="text"], input[type="url"], input[type="password"] {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+code {
+  background: #21262d;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+pre {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  padding: 0.5rem;
+  border-radius: 4px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.8rem;
+  margin: 0.25rem 0;
+  max-height: 300px;
+}
+
+.method {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  margin-right: 0.4rem;
+  text-transform: uppercase;
+}
+.method-get { background: #1f6feb; color: white; }
+.method-post { background: #238636; color: white; }
+.method-put { background: #9e6a03; color: white; }
+.method-patch { background: #6639ba; color: white; }
+.method-delete { background: #da3633; color: white; }
+
+details { margin: 0.5rem 0; }
+details summary {
+  cursor: pointer;
+  color: #8b949e;
+  padding: 0.25rem 0;
+  font-size: 0.85rem;
+}
+details summary:hover { color: #c9d1d9; }
+
+.add-form { margin-top: 1.5rem; }
+.add-form form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  max-width: 600px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: #8b949e;
+}
+label small { color: #6e7681; }
+
+input, textarea {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  width: 100%;
+}
+input:focus, textarea:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+
+button {
+  background: #238636;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 0.45rem 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+button:hover { background: #2ea043; }
+button.secondary { background: #21262d; }
+button.secondary:hover { background: #30363d; }
+button.danger { background: #da3633; }
+button.danger:hover { background: #f85149; }
+
+.chat-config { margin-bottom: 1rem; }
+.chat-config .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+}
+
+#messages {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 1rem;
+  height: 55vh;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+#messages:empty::before {
+  content: "No messages yet. Try: \"What lights do I have?\" or \"Turn the bedroom light on\".";
+  color: #6e7681;
+  font-style: italic;
+}
+
+.msg {
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 4px;
+  border-left: 3px solid;
+  background: rgba(255,255,255,0.02);
+}
+.msg-user { border-color: #58a6ff; }
+.msg-assistant { border-color: #56d364; }
+.msg-tool { border-color: #d29922; }
+.msg-system { border-color: #8b949e; opacity: 0.7; }
+.msg-error { border-color: #f85149; background: rgba(248,81,73,0.05); }
+.msg .label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+  margin-bottom: 0.25rem;
+}
+.msg .body { white-space: pre-wrap; word-break: break-word; }
+.tool-call {
+  font-size: 0.8rem;
+  color: #d29922;
+  margin-top: 0.25rem;
+}
+
+#chat-form {
+  display: flex;
+  gap: 0.5rem;
+}
+#chat-form input { flex: 1; }
+
+.thinking {
+  color: #8b949e;
+  font-style: italic;
+  padding: 0.5rem;
+}
+
+.tool-pending {
+  border-left-style: dashed;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+.tool-pending .body { font-style: italic; }
+.msg details { margin-top: 0.4rem; }
+.msg details summary { font-size: 0.75rem; color: #8b949e; }
+.msg details pre { max-height: 200px; }

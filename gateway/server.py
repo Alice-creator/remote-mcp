@@ -1,53 +1,52 @@
-"""Gateway MCP server — routes tasks from Claude.ai to worker devices."""
+"""Gateway server — wires FastMCP, the HTTP API, the chat proxy, and the UI."""
+
+import logging
+from pathlib import Path
 
 import uvicorn
-from starlette.applications import Starlette
-from starlette.requests import Request
-from starlette.responses import JSONResponse
-from starlette.routing import Route
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
+from starlette.applications import Starlette
+from starlette.routing import Mount
 
-from shared.config import GATEWAY_PORT, FACTORY_SECRET
-from gateway import registry, tools
+from gateway import http_api, chat, tool_registry
+from gateway.config import GATEWAY_PORT
+from gateway.ui import routes as ui_routes
+
+logger = logging.getLogger("gateway")
 
 mcp = FastMCP(
-    "ai-factory-gateway",
+    "plexus-gateway",
     port=GATEWAY_PORT,
     streamable_http_path="/",
-    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=True),
+    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
 )
 
-tools.register(mcp)
-registry.load_from_disk()
 
-
-async def _register_endpoint(request: Request):
-    """Handle worker registration heartbeats."""
-    try:
-        data = await request.json()
-    except Exception:
-        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
-
-    if FACTORY_SECRET and data.get("secret") != FACTORY_SECRET:
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
-
-    if registry.register_worker(data):
-        return JSONResponse({"status": "ok", "worker_id": data.get("worker_id")})
-    return JSONResponse({"error": "Invalid registration data"}, status_code=400)
+def _reload():
+    n_devices, n_tools = tool_registry.reload(mcp)
+    logger.info(f"Loaded {n_tools} tool(s) from {n_devices} device(s).")
+    return n_devices, n_tools
 
 
 def run():
-    print(f"[gateway] Starting on port {GATEWAY_PORT}")
-    print(f"[gateway] Workers should POST heartbeats to http://<gateway>:{GATEWAY_PORT}/api/register")
+    logging.basicConfig(level=logging.INFO, format="[%(name)s] %(message)s")
+    _reload()
 
     mcp_app = mcp.streamable_http_app()
 
-    app = Starlette(
-        routes=[
-            Route("/api/register", _register_endpoint, methods=["POST"]),
-        ],
-    )
-    app.mount("/", mcp_app)
+    routes = [
+        *http_api.routes(_reload),
+        *chat.routes(),
+        Mount("/mcp", app=mcp_app),
+        *ui_routes(),
+    ]
+
+    app = Starlette(routes=routes)
+
+    print(f"[gateway] Starting on port {GATEWAY_PORT}")
+    print(f"[gateway] UI:           http://localhost:{GATEWAY_PORT}/")
+    print(f"[gateway] MCP endpoint: http://localhost:{GATEWAY_PORT}/mcp/")
+    print(f"[gateway] HTTP API:     http://localhost:{GATEWAY_PORT}/api/...")
 
     uvicorn.run(app, host="0.0.0.0", port=GATEWAY_PORT)

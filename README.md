@@ -1,124 +1,142 @@
-# AI Factory — Remote MCP
+# Plexus
 
-Multi-device Claude orchestration over MCP. Claude.ai on your phone/laptop delegates tasks to Claude Code instances running on your other devices (PCs, servers) via ngrok tunnels.
+A protocol-agnostic gateway that lets **any AI model** control **any API-first device** through a single tool surface.
+
+Point Plexus at an OpenAPI spec, and every operation in that spec becomes an AI tool — exposed simultaneously over MCP, REST, and an OpenAI-compatible chat proxy.
+
+You register devices by pointing at their OpenAPI specs. The gateway parses each spec, generates tool definitions, and exposes them through:
+
+- **MCP** (for Claude.ai and other MCP clients)
+- **REST** (`/tools`, `/call`)
+- **OpenAI-compatible chat proxy** (`/api/chat`) that runs the agent loop for you, so you can drive it with Ollama Cloud, OpenAI, OpenRouter, or any model that speaks function calling
+
+A built-in web UI (`/`) gives you device management, manual tool invocation, and a chat playground.
+
+First use case: smart home.
 
 ## Architecture
 
 ```
-Claude.ai (phone/laptop)
-  └── Gateway MCP Server        ← Claude.ai connects here
-        ├── list_workers
-        ├── send_task
-        ├── send_claude_task
-        ├── broadcast_task
-        ├── get_worker_tools
-        └── create_remote_tool
-              │
-              ├── Worker (office-pc)    ← ngrok tunnel
-              ├── Worker (home-pc)      ← ngrok tunnel
-              └── Worker (server)       ← ngrok tunnel
-                    ├── execute_shell
-                    ├── read_file / write_file / list_directory
-                    ├── get_system_info
-                    ├── claude_code          ← persistent Claude Code session
-                    ├── claude_code_reset
-                    ├── create_tool          ← dynamic tool creation
-                    ├── list_dynamic_tools
-                    └── remove_dynamic_tool
+Browser UI  ────►  Gateway  ──┬──►  /api/chat   ──►  Ollama / OpenAI / ...
+                              │                       (agent loop runs here)
+Claude.ai   ────►  /mcp/      ├──►  Device 1 API (described by OpenAPI spec)
+                              ├──►  Device 2 API
+Any agent   ────►  /tools     └──►  ...
+                  /call
 ```
 
-- **Gateway** — dumb router. Holds worker registry, forwards tool calls. Claude.ai is the brain.
-- **Worker** — brains + hands on each device. Claude Code on each worker autonomously decides how to execute tasks, and can create new MCP tools at runtime.
+- `workspace/devices/*.yaml` — one file per device (name, base URL, OpenAPI spec)
+- The gateway fetches each spec on startup, generates tool defs, and registers them everywhere
 
 ## Setup
 
-### 1. Install dependencies
-
 ```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\Activate.ps1
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-### 2. Configure environment
-
-```bash
 cp .env.example .env
+# edit .env to set PLEXUS_API_KEY for the chat proxy
 ```
 
-Edit `.env`:
+## Run (local)
 
-```env
-# Gateway machine
-GATEWAY_PORT=8000
-FACTORY_SECRET=your-strong-shared-secret
+Open three terminals:
 
-# Worker machines (each device)
-MCP_PORT=8001
-WORKER_NAME=office-pc
-CLAUDE_WORKING_DIR=~/Projects
-GATEWAY_URL=https://<your-gateway-ngrok-url>
-FACTORY_SECRET=your-strong-shared-secret  # same as gateway
-```
-
-### 3. Run
-
-**Gateway** (one machine, exposed via ngrok):
 ```bash
+# Terminal 1 — mock lights service
+uvicorn mocks.lights:app --port 9001
+
+# Terminal 2 — mock thermostat service
+uvicorn mocks.thermostat:app --port 9002
+
+# Terminal 3 — gateway
 python run_gateway.py
-ngrok http 8000
-```
-Add the ngrok URL to Claude.ai: **Settings → Connectors → Add custom connector**.
-
-**Each worker** (every device you want to control):
-```bash
-python run_worker.py
-ngrok http 8001
-# Set the ngrok URL as WORKER_NAME's endpoint in its .env
 ```
 
-### 4. Docker (optional, single-machine testing)
+Then open <http://localhost:8000/> in your browser:
+
+- **Devices** — `mock_lights` and `mock_thermostat` are already seeded in `workspace/devices/`
+- **Tools** — auto-generated from each device's OpenAPI spec; click any tool to invoke it manually
+- **Chat** — set your LLM base URL / model / API key in the gear menu, then chat
+
+## Run (Docker)
 
 ```bash
 docker compose up -d --build
 ```
 
-This runs both gateway (port 8000) and worker (port 8001) on the same machine.
+Brings up gateway (port 8000) + both mocks (9001, 9002).
 
-## Worker Tools
+## Adding a new device
 
-| Tool | Description |
-|------|-------------|
-| `execute_shell` | Run any shell command (60s max) |
-| `read_file` | Read a file by absolute path |
-| `write_file` | Write content to a file |
-| `list_directory` | List files in a directory |
-| `get_system_info` | CPU, memory, disk usage |
-| `claude_code` | Send a task to a persistent Claude Code session |
-| `claude_code_reset` | Kill and restart the Claude Code session |
-| `create_tool` | Create a new MCP tool at runtime from Python code |
-| `list_dynamic_tools` | List all dynamically created tools |
-| `remove_dynamic_tool` | Remove a dynamic tool |
+Either drop a YAML in `workspace/devices/`:
 
-## Gateway Tools (what Claude.ai sees)
-
-| Tool | Description |
-|------|-------------|
-| `list_workers` | Show all registered workers + status + capabilities |
-| `send_task` | Call a specific tool on a specific worker |
-| `send_claude_task` | Send a natural-language task to a worker's Claude Code |
-| `broadcast_task` | Run the same tool on all online workers |
-| `get_worker_tools` | List tools available on a specific worker |
-| `create_remote_tool` | Create a dynamic tool on a remote worker |
-
-## Dynamic Tools
-
-Workers can create new MCP tools at runtime. Claude Code on a worker explores the device, then calls `create_tool` to build app-specific tools using real interfaces (CLIs, APIs, libraries) rather than generic GUI automation.
-
-```
-You: "Play my Liked Songs on Spotify on home-pc"
-→ Worker's Claude Code: finds Spotify CLI → creates spotify_control tool → plays music
-→ Next time: tool already exists, instant response
+```yaml
+name: home_assistant
+description: My Home Assistant instance
+base_url: http://homeassistant.local:8123
+spec_url: http://homeassistant.local:8123/api/openapi.json
+auth:
+  type: bearer
+  token: YOUR_LONG_LIVED_TOKEN
 ```
 
-Dynamic tools persist to `workspace/dynamic_tools.json` and reload automatically on restart.
+…or use the **+ Add device** form in the UI. Either way, the gateway re-reads the registry and re-fetches specs.
+
+Auth types supported:
+
+```yaml
+auth: { type: bearer, token: "..." }
+auth: { type: api_key, header: "X-API-Key", value: "..." }
+auth: { type: header, name: "X-Custom-Auth", value: "..." }
+```
+
+## API reference
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/devices` | List registered devices |
+| POST | `/api/devices` | Add a device (body matches YAML fields) |
+| DELETE | `/api/devices/{name}` | Remove a device |
+| GET | `/api/tools` | List all generated tools + schemas |
+| POST | `/api/call` | `{tool, args}` — invoke one tool |
+| POST | `/api/reload` | Re-scan registry + refetch all specs |
+| POST | `/api/chat` | OpenAI-style agent loop (see `gateway/chat_proxy.py`) |
+| ANY | `/mcp/` | MCP streamable-HTTP endpoint for Claude.ai etc. |
+
+## Connecting Claude.ai
+
+Expose the gateway via ngrok:
+
+```bash
+ngrok http 8000
+```
+
+In Claude.ai → **Settings → Connectors → Add custom connector**, paste `https://<your-ngrok>.ngrok-free.app/mcp/`.
+
+## Layout
+
+```
+gateway/
+  server.py          main entry: FastMCP + Starlette + UI
+  config.py          env vars (PLEXUS_*, GATEWAY_PORT)
+  devices.py         YAML registry
+  openapi.py         spec parsing → ToolDef
+  tool_registry.py   live tool index, dynamic function gen for FastMCP
+  proxy.py           ToolDef + args → HTTP request
+  http_api.py        REST endpoints used by the UI
+  chat.py            /api/chat + /api/chat/stream agent loop
+  ui.py              static-file mount
+  static/            HTML/CSS/JS UI
+
+mocks/
+  lights.py          FastAPI mock smart-bulbs
+  thermostat.py      FastAPI mock thermostat
+
+workspace/devices/   user device registry (one YAML per device)
+workspace/specs/     local OpenAPI specs referenced by spec_path
+
+legacy/              the original Claude-Code-on-each-device worker model
+                     plus the old shared/ helpers. Not on the v1 path; kept
+                     for reference and possible revival for hardware that
+                     doesn't have an HTTP API.
+```

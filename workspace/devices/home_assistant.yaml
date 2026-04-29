@@ -1,0 +1,7 @@
+name: home_assistant
+description: Home Assistant — controls every connected smart-home device
+base_url: http://localhost:8123
+spec_path: workspace/specs/home_assistant.yaml
+auth:
+  type: bearer
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJiOTZkMjUxYjc4Mzk0ZDgwODc4ODU1MDNlMTkwZjQzNSIsImlhdCI6MTc3NzQ1NjEyOCwiZXhwIjoyMDkyODE2MTI4fQ.IV0sgWkKiatpIVtCItN4aCuF81jFMd3dG49VosEGHFA

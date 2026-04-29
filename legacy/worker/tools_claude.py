@@ -3,7 +3,7 @@ import subprocess
 import threading
 import time
 
-from shared.config import CLAUDE_WORKING_DIR
+from legacy.shared.config import CLAUDE_WORKING_DIR
 
 _claude_process: subprocess.Popen | None = None
 _claude_lock = threading.Lock()

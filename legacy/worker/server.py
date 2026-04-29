@@ -1,8 +1,8 @@
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
-from shared.config import MCP_PORT
-from worker import tools_cli, tools_claude, tools_dynamic, tools_meta, heartbeat
+from legacy.shared.config import MCP_PORT
+from legacy.worker import tools_cli, tools_claude, tools_dynamic, tools_meta, heartbeat
 
 mcp = FastMCP(
     "ai-factory-worker",

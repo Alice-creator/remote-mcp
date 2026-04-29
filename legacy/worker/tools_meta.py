@@ -2,7 +2,7 @@
 
 import json
 
-from worker import tools_dynamic
+from legacy.worker import tools_dynamic
 
 _mcp = None
 

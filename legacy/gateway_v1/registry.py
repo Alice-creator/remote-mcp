@@ -4,7 +4,7 @@ import json
 import time
 from pathlib import Path
 
-from shared.models import WorkerInfo
+from legacy.shared.models import WorkerInfo
 
 REGISTRY_FILE = Path("workspace/registry.json")
 OFFLINE_TTL = 90

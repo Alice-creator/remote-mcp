@@ -1,7 +1,7 @@
 """Dispatcher — forwards tool calls to remote workers via MCP client."""
 
-from gateway import registry
-from shared import mcp_client
+from legacy.gateway_v1 import registry
+from legacy.shared import mcp_client
 
 
 async def send_task(worker_id: str, tool_name: str, arguments: dict | None = None, timeout: float = 120) -> str:

@@ -2,7 +2,7 @@
 
 import json
 
-from gateway import registry, dispatcher
+from legacy.gateway_v1 import registry, dispatcher
 
 
 async def list_workers() -> str:
